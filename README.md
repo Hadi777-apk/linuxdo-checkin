@@ -56,6 +56,7 @@
 | `WXPUSH_URL`         | wxpush 服务器地址         | `https://your.wxpush.server`           |
 | `WXPUSH_TOKEN`       | wxpush 的 token       | `your_wxpush_token`                    |
 | `BROWSE_ENABLED`     | 是否启用浏览帖子功能           | `true` 或 `false`，默认为 `true`           |
+| `BROWSE_COUNT`       | 每次运行随机浏览的主题数量     | 正整数，默认为 `10`                       |
 
 ---
 
@@ -72,6 +73,7 @@
         - （二选一）`LINUXDO_COOKIES`：从浏览器复制的 Cookie 字符串（**推荐，优先使用**）。
         - （二选一）`LINUXDO_USERNAME` + `LINUXDO_PASSWORD`：你的 LinuxDo 用户名/邮箱和密码。
         - (可选) `BROWSE_ENABLED`：是否启用浏览帖子，`true` 或 `false`，默认为 `true`。
+        - (可选) `BROWSE_COUNT`：每次运行随机浏览的主题数量，默认为 `10`。
         - (可选) `GOTIFY_URL` 和 `GOTIFY_TOKEN`。
         - (可选) `SC3_PUSH_KEY`。
         - (可选) `WXPUSH_URL` 和 `WXPUSH_TOKEN`。

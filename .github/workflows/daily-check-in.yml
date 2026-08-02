@@ -41,6 +41,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           LINUXDO_COOKIES: ${{ secrets.LINUXDO_COOKIES }}
           BROWSE_ENABLED: ${{ secrets.BROWSE_ENABLED }}
+          BROWSE_COUNT: ${{ secrets.BROWSE_COUNT }}
         run: |
           python main.py
 

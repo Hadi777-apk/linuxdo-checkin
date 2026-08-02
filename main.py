@@ -52,6 +52,7 @@ BROWSE_ENABLED = os.environ.get("BROWSE_ENABLED", "true").strip().lower() not in
     "0",
     "off",
 ]
+BROWSE_COUNT = max(1, int(os.environ.get("BROWSE_COUNT", "10")))
 if not USERNAME:
     USERNAME = os.environ.get("USERNAME")
 if not PASSWORD:
@@ -253,8 +254,9 @@ class LinuxDoBrowser:
         if not topic_list:
             logger.error("未找到主题帖")
             return False
-        logger.info(f"发现 {len(topic_list)} 个主题帖，随机选择10个")
-        for topic in random.sample(topic_list, 10):
+        browse_count = min(BROWSE_COUNT, len(topic_list))
+        logger.info(f"发现 {len(topic_list)} 个主题帖，随机选择{browse_count}个")
+        for topic in random.sample(topic_list, browse_count):
             self.click_one_topic(topic.attr("href"))
         return True
 
@@ -263,8 +265,6 @@ class LinuxDoBrowser:
         new_page = self.browser.new_tab()
         try:
             new_page.get(topic_url)
-            if random.random() < 0.3:  # 0.3 * 30 = 9
-                self.click_like(new_page)
             self.browse_post(new_page)
         finally:
             try:
@@ -273,34 +273,33 @@ class LinuxDoBrowser:
                 pass
 
     def browse_post(self, page):
-        prev_url = None
-        # 开始自动滚动，最多滚动10次
-        for _ in range(10):
-            # 随机滚动一段距离
-            scroll_distance = random.randint(550, 650)  # 随机滚动 550-650 像素
+        stable_bottom_rounds = 0
+        previous_height = 0
+        # 持续滚动并等待懒加载完成，直到页面底部高度稳定。
+        for _ in range(60):
+            scroll_distance = random.randint(550, 650)
             logger.info(f"向下滚动 {scroll_distance} 像素...")
             page.run_js(f"window.scrollBy(0, {scroll_distance})")
             logger.info(f"已加载页面: {page.url}")
 
-            if random.random() < 0.03:  # 33 * 4 = 132
-                logger.success("随机退出浏览")
-                break
-
-            # 检查是否到达页面底部
-            at_bottom = page.run_js(
-                "window.scrollY + window.innerHeight >= document.body.scrollHeight"
-            )
-            current_url = page.url
-            if current_url != prev_url:
-                prev_url = current_url
-            elif at_bottom and prev_url == current_url:
-                logger.success("已到达页面底部，退出浏览")
-                break
-
-            # 动态随机等待
-            wait_time = random.uniform(2, 4)  # 随机等待 2-4 秒
+            wait_time = random.uniform(2, 4)
             logger.info(f"等待 {wait_time:.2f} 秒...")
             time.sleep(wait_time)
+
+            page.run_js("window.scrollTo(0, document.body.scrollHeight)")
+            current_height = page.run_js("return document.body.scrollHeight")
+            at_bottom = page.run_js(
+                "return window.scrollY + window.innerHeight >= document.body.scrollHeight - 4"
+            )
+            if at_bottom and current_height == previous_height:
+                stable_bottom_rounds += 1
+                if stable_bottom_rounds >= 2:
+                    logger.success("已完整浏览到页面底部，已读状态已提交")
+                    time.sleep(3)
+                    break
+            else:
+                stable_bottom_rounds = 0
+            previous_height = current_height
 
     def run(self):
         try:
@@ -332,20 +331,6 @@ class LinuxDoBrowser:
                 self.browser.quit()
             except Exception:
                 pass
-
-    def click_like(self, page):
-        try:
-            # 专门查找未点赞的按钮
-            like_button = page.ele(".discourse-reactions-reaction-button")
-            if like_button:
-                logger.info("找到未点赞的帖子，准备点赞")
-                like_button.click()
-                logger.info("点赞成功")
-                time.sleep(random.uniform(1, 2))
-            else:
-                logger.info("帖子可能已经点过赞了")
-        except Exception as e:
-            logger.error(f"点赞失败: {str(e)}")
 
     def print_connect_info(self):
         logger.info("获取连接信息")
