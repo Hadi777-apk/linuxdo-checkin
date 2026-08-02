@@ -52,7 +52,7 @@ BROWSE_ENABLED = os.environ.get("BROWSE_ENABLED", "true").strip().lower() not in
     "0",
     "off",
 ]
-BROWSE_COUNT = max(1, int(os.environ.get("BROWSE_COUNT", "10")))
+BROWSE_COUNT = max(1, int(os.environ.get("BROWSE_COUNT") or "10"))
 if not USERNAME:
     USERNAME = os.environ.get("USERNAME")
 if not PASSWORD:
